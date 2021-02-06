@@ -1,0 +1,36 @@
+---
+- name: get docker packages
+  get_url:
+    url: https://download.docker.com/linux/debian/dists/buster/pool/stable/armhf/{{ item }}
+    dest: /tmp/{{ item }}
+  with_items:
+    - containerd.io_1.2.6-3_armhf.deb
+    - docker-ce-cli_19.03.5~3-0~debian-buster_armhf.deb
+    - docker-ce_19.03.5~3-0~debian-buster_armhf.deb
+
+- name: install docker packages
+  apt:
+    deb: /tmp/{{ item }}
+  with_items:
+    - containerd.io_1.2.6-3_armhf.deb
+    - docker-ce-cli_19.03.5~3-0~debian-buster_armhf.deb
+    - docker-ce_19.03.5~3-0~debian-buster_armhf.deb
+  become: true
+
+- name: check hold package
+  command: apt-mark showhold
+  register: holds
+  changed_when: false
+
+- name: hold docker version
+  shell: apt-mark hold docker-ce
+  become: true
+  when:
+    - holds.stdout.find('docker-ce') == -1
+
+- name: append docker group
+  user:
+    name: pi
+    groups: docker
+    append: true
+  become: true

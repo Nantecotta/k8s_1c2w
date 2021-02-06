@@ -1,0 +1,39 @@
+---
+- name: update apt
+  apt:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - apt-transport-https
+    - curl
+  become: true
+
+- name: add apt-key
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+  become: true
+
+- name: add kubernetes repository
+  apt_repository:
+    repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+  become: true
+
+- name: install kubernetes
+  apt:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - kubelet
+    - kubeadm
+    - kubectl
+  become: true
+
+- name: install python libraly for ansible
+  pip:
+    name:
+      - openshift>=0.6
+      - PyYAML>=3.11
+    state: present
+  become: true

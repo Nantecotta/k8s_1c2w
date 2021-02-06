@@ -1,0 +1,43 @@
+---
+- name: Check kubernetes config
+  stat:
+    path: /etc/kubernetes/controller-manager.conf 
+  register: conf
+
+- name: init k8s cluster
+  shell: kubeadm init --pod-network-cidr=10.244.0.0/16
+  become: yes
+  when:
+    not conf.stat.exists
+
+- name: setup kubectl command
+  file:
+    path: .kube
+    state: directory
+
+- name: copy kube-config
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/pi/.kube/config
+    owner: pi
+    group: pi
+    remote_src: true
+  become: true
+
+- name: Get pod list
+  command: kubectl get pods --all-namespaces
+  register: pods
+  changed_when: false
+  failed_when: false
+
+- block:
+  - name: Get flannel configuration
+    get_url:
+      url: https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
+      dest: /home/pi/.kube/flannel.yml
+
+  - name: apply flannel deployment
+    command: kubectl apply -f /home/pi/.kube/flannel.yml
+
+  when:
+    - "'flannel' not in pods.stdout"

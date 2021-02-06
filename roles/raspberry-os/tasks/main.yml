@@ -1,0 +1,44 @@
+---
+- name: set hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+  become: yes
+
+- name: set hosts
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '{{ item.regexp }}'
+    line: "{{ item.line }}"
+  with_items:
+    - { regexp: '^127.0.1.1',    line: "127.0.1.1  {{ inventory_hostname }}" }
+    - { regexp: "192.168.13.11", line: "192.168.13.11  k8s-master" }
+    - { regexp: "192.168.13.12", line: "192.168.13.12  k8s-node1" }
+    - { regexp: "192.168.13.13", line: "192.168.13.13  k8s-node2" }
+  become: true
+
+- name: Set iptables
+  alternatives:
+    name: iptables
+    path: /usr/sbin/iptables-legacy
+  become: yes
+
+- name: Disable SWAP since kubernetes can't work with swap enabled (1/2)
+  command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+  become: yes
+
+- name: Disable SWAP in fstab since kubernetes can't work with swap enabled (2/2)
+  replace:
+    path: /etc/fstab
+    regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+    replace: '# \1'
+  become: yes
+
+- name: install pip
+  apt:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - python-dev
+    - python-pip
+  become: true

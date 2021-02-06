@@ -1,0 +1,21 @@
+---
+- name: Install kubernetes on raspberry pi
+  hosts: all
+  roles:
+    - raspberry-os
+    - install-docker
+    - install-k8s
+
+- name: Setup k8s cluster
+  hosts: master
+  gather_facts: false
+  roles:
+    - k8s_master
+
+- name: Setup k8s worker
+  hosts:
+    - master
+    - worker
+  gather_facts: false
+  roles:
+    - k8s_worker

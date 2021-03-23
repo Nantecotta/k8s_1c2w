@@ -1,20 +1,22 @@
 ---
-- name: get docker packages
-  get_url:
-    url: https://download.docker.com/linux/debian/dists/buster/pool/stable/armhf/{{ item }}
-    dest: /tmp/{{ item }}
-  with_items:
-    - containerd.io_1.2.6-3_armhf.deb
-    - docker-ce-cli_19.03.5~3-0~debian-buster_armhf.deb
-    - docker-ce_19.03.5~3-0~debian-buster_armhf.deb
+- apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  become: true
 
-- name: install docker packages
-  apt:
-    deb: /tmp/{{ item }}
+- apt_repository:
+    repo: deb [arch=arm64] https://download.docker.com/linux/ubuntu focal stable
+    state: present
+  become: true
+
+- apt:
+    name: "{{ item }}"
+    state: latest
+    update_cache: true
   with_items:
-    - containerd.io_1.2.6-3_armhf.deb
-    - docker-ce-cli_19.03.5~3-0~debian-buster_armhf.deb
-    - docker-ce_19.03.5~3-0~debian-buster_armhf.deb
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
   become: true
 
 - name: check hold package

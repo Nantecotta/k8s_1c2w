@@ -1,4 +1,26 @@
 ---
+- name: Check cmdline.txt
+  shell: "cat /boot/firmware/cmdline.txt"
+  changed_when: false
+  register: cmdline
+
+- block:
+  - name: Set cgroups int cmdline.txt
+    template:
+      src: cmdline.txt.j2
+      dest: /boot/firmware/cmdline.txt
+      owner: root
+      group: root
+      mode: 0755
+    become: true
+
+  - name: reboot node when update cmdline.txt
+    reboot:
+    become: true
+
+  when:
+    - "'cgroup' not in cmdline.stdout"
+
 - name: set hostname
   hostname:
     name: "{{ inventory_hostname }}"
@@ -34,11 +56,25 @@
     replace: '# \1'
   become: yes
 
-- name: install pip
+- name: install common packages
   apt:
     name: "{{ item }}"
     state: latest
+    update_cache: true
   with_items:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg-agent
+    - software-properties-common
     - python-dev
-    - python-pip
+    - python2
+    - python3-pip
+  become: true
+
+- get_url:
+    url: https://bootstrap.pypa.io/pip/2.7/get-pip.py
+    dest: /tmp/get-pip.py
+
+- command: python2 /tmp/get-pip.py
   become: true

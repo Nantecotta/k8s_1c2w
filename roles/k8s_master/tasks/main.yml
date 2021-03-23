@@ -18,9 +18,9 @@
 - name: copy kube-config
   copy:
     src: /etc/kubernetes/admin.conf
-    dest: /home/pi/.kube/config
-    owner: pi
-    group: pi
+    dest: /home/ubuntu/.kube/config
+    owner: ubuntu
+    group: ubuntu
     remote_src: true
   become: true
 
@@ -33,11 +33,11 @@
 - block:
   - name: Get flannel configuration
     get_url:
-      url: https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
-      dest: /home/pi/.kube/flannel.yml
+      url: https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+      dest: /home/ubuntu/.kube/flannel.yml
 
   - name: apply flannel deployment
-    command: kubectl apply -f /home/pi/.kube/flannel.yml
+    command: kubectl apply -f /home/ubuntu/.kube/flannel.yml
 
   when:
     - "'flannel' not in pods.stdout"

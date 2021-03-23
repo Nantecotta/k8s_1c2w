@@ -29,12 +29,12 @@
       path:  "{{ item.path }}"
       state: "{{ item.state }}"
     with_items:
-      - { path: /home/pi/.kube , state: directory }
-      - { path: /home/pi/.kube/config , state: touch }
+      - { path: /home/ubuntu/.kube , state: directory }
+      - { path: /home/ubuntu/.kube/config , state: touch }
   
   - name: Set kubectl config
     blockinfile:
-      dest: /home/pi/.kube/config
+      dest: /home/ubuntu/.kube/config
       content: "{{ kubectl_config.stdout }}"
 
   - name: set worker label to node
